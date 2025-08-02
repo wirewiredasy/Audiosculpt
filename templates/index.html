@@ -1,256 +1,311 @@
-{% extends "base.html" %}
-
-{% block title %}Audio Processor Pro - Professional Audio Processing{% endblock %}
-
-{% block content %}
-<div class="row">
-    <div class="col-12">
-        <div class="text-center mb-5">
-            <h1 class="display-4 mb-3">
-                <i class="fas fa-waveform-lines"></i>
-                Audio Processor Pro
-            </h1>
-            <p class="lead text-muted">
-                Professional-grade audio processing tools for vocal removal, pitch adjustment, format conversion, and more
-            </p>
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ODOREMOVER - Professional Audio Processing</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/modern-style.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top glass-nav">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="#">
+                <div class="brand-icon">
+                    <i class="fas fa-waveform-lines"></i>
+                </div>
+                <span class="ms-2 fw-bold">ODOREMOVER</span>
+            </a>
+            <div class="d-flex align-items-center">
+                <span class="badge bg-success pulse-animation">LIVE</span>
+            </div>
         </div>
-    </div>
-</div>
+    </nav>
 
-<!-- File Upload Section -->
-<div class="row mb-5">
-    <div class="col-12">
-        <div class="audio-card p-5">
-            <h3 class="text-center mb-4">
-                <i class="fas fa-upload"></i> Upload Audio File
-            </h3>
-            
-            <div class="file-drop-zone" id="dropZone">
-                <div class="text-center">
-                    <i class="fas fa-cloud-upload-alt fa-3x mb-3 text-muted"></i>
-                    <h5>Drag & Drop Audio File Here</h5>
-                    <p class="text-muted">or click to browse</p>
-                    <p class="small text-muted">
-                        Supported formats: MP3, WAV, FLAC, OGG, M4A<br>
-                        Maximum file size: 500MB
-                    </p>
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="row align-items-center min-vh-100">
+                <div class="col-lg-6">
+                    <div class="hero-content">
+                        <h1 class="hero-title">
+                            Professional Audio 
+                            <span class="gradient-text">Processing</span>
+                        </h1>
+                        <p class="hero-subtitle">
+                            Advanced AI-powered tools for vocal separation, pitch adjustment, 
+                            format conversion, and 8+ professional audio effects
+                        </p>
+                        <div class="feature-badges">
+                            <span class="feature-badge">
+                                <i class="fas fa-microphone-slash"></i> Vocal Removal
+                            </span>
+                            <span class="feature-badge">
+                                <i class="fas fa-tune"></i> Pitch & Tempo
+                            </span>
+                            <span class="feature-badge">
+                                <i class="fas fa-exchange-alt"></i> Format Convert
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="upload-section">
+                        <div class="upload-card">
+                            <div class="upload-area" id="uploadArea">
+                                <div class="upload-icon">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                </div>
+                                <h3>Drop Your Audio File</h3>
+                                <p>or click to browse</p>
+                                <div class="supported-formats">
+                                    <span>MP3</span> <span>WAV</span> <span>FLAC</span> 
+                                    <span>OGG</span> <span>M4A</span>
+                                </div>
+                            </div>
+                            <input type="file" id="fileInput" accept=".mp3,.wav,.flac,.ogg,.m4a" hidden>
+                        </div>
+                    </div>
                 </div>
             </div>
-            
-            <input type="file" id="fileInput" accept=".mp3,.wav,.flac,.ogg,.m4a" style="display: none;">
         </div>
-    </div>
-</div>
+    </section>
 
-<!-- File Information -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div id="fileInfo" style="display: none;"></div>
-    </div>
-</div>
+    <!-- File Info Section -->
+    <section class="file-info-section" id="fileInfoSection" style="display: none;">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <div class="info-card">
+                        <div id="fileInfoContent"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-<!-- Processing Options -->
-<div class="row mb-5" id="processingOptions" style="display: none;">
-    <div class="col-12">
-        <div class="audio-card p-4">
-            <h3 class="text-center mb-4">
-                <i class="fas fa-cogs"></i> Audio Processing Tools
-            </h3>
+    <!-- Processing Tools Section -->
+    <section class="tools-section" id="toolsSection" style="display: none;">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Audio Processing Tools</h2>
+                <p class="section-subtitle">Choose from our professional-grade audio effects</p>
+            </div>
             
             <div class="row g-4">
-                <!-- Vocal Removal -->
+                <!-- Vocal Separation -->
                 <div class="col-lg-4 col-md-6">
-                    <div class="text-center">
-                        <div class="feature-icon">
+                    <div class="tool-card" data-tool="vocal-separation">
+                        <div class="tool-icon">
                             <i class="fas fa-microphone-slash"></i>
                         </div>
-                        <h5>Vocal Removal</h5>
-                        <p class="text-muted">Separate vocals from instrumental tracks using advanced AI processing</p>
-                        <button class="btn btn-audio" data-operation="vocal_removal">
-                            Remove Vocals
-                        </button>
+                        <h4>Vocal Separation</h4>
+                        <p>AI-powered vocal and instrumental separation using advanced 2-stem processing</p>
+                        <div class="tool-features">
+                            <span><i class="fas fa-check"></i> High-quality separation</span>
+                            <span><i class="fas fa-check"></i> Stereo processing</span>
+                        </div>
                     </div>
                 </div>
-                
+
                 <!-- Pitch & Tempo -->
                 <div class="col-lg-4 col-md-6">
-                    <div class="text-center">
-                        <div class="feature-icon">
+                    <div class="tool-card" data-tool="pitch-tempo">
+                        <div class="tool-icon">
                             <i class="fas fa-tune"></i>
                         </div>
-                        <h5>Pitch & Tempo</h5>
-                        <p class="text-muted">Adjust pitch and tempo independently without quality loss</p>
-                        <button class="btn btn-audio" data-operation="pitch_tempo">
-                            Adjust Pitch/Tempo
-                        </button>
+                        <h4>Pitch & Tempo</h4>
+                        <p>Adjust pitch and tempo independently without quality loss</p>
+                        <div class="tool-features">
+                            <span><i class="fas fa-check"></i> ±12 semitones</span>
+                            <span><i class="fas fa-check"></i> 0.5x - 2x speed</span>
+                        </div>
                     </div>
                 </div>
-                
-                <!-- Format Conversion -->
+
+                <!-- Format Converter -->
                 <div class="col-lg-4 col-md-6">
-                    <div class="text-center">
-                        <div class="feature-icon">
+                    <div class="tool-card" data-tool="convert">
+                        <div class="tool-icon">
                             <i class="fas fa-exchange-alt"></i>
                         </div>
-                        <h5>Format Converter</h5>
-                        <p class="text-muted">Convert between different audio formats with high quality</p>
-                        <button class="btn btn-audio" data-operation="convert">
-                            Convert Format
-                        </button>
+                        <h4>Format Converter</h4>
+                        <p>Convert between audio formats with professional quality</p>
+                        <div class="tool-features">
+                            <span><i class="fas fa-check"></i> 5+ formats</span>
+                            <span><i class="fas fa-check"></i> High bitrate</span>
+                        </div>
                     </div>
                 </div>
-                
+
                 <!-- Audio Cutter -->
                 <div class="col-lg-4 col-md-6">
-                    <div class="text-center">
-                        <div class="feature-icon">
+                    <div class="tool-card" data-tool="cut">
+                        <div class="tool-icon">
                             <i class="fas fa-cut"></i>
                         </div>
-                        <h5>Audio Cutter</h5>
-                        <p class="text-muted">Extract specific portions of your audio files</p>
-                        <button class="btn btn-audio" data-operation="cut">
-                            Cut Audio
-                        </button>
+                        <h4>Audio Cutter</h4>
+                        <p>Extract specific portions with precise timing control</p>
+                        <div class="tool-features">
+                            <span><i class="fas fa-check"></i> Precise cutting</span>
+                            <span><i class="fas fa-check"></i> No quality loss</span>
+                        </div>
                     </div>
                 </div>
-                
+
                 <!-- Noise Reduction -->
                 <div class="col-lg-4 col-md-6">
-                    <div class="text-center">
-                        <div class="feature-icon">
+                    <div class="tool-card" data-tool="noise-reduction">
+                        <div class="tool-icon">
                             <i class="fas fa-volume-xmark"></i>
                         </div>
-                        <h5>Noise Reduction</h5>
-                        <p class="text-muted">Remove background noise and improve audio clarity</p>
-                        <button class="btn btn-audio" data-operation="noise_reduction">
-                            Reduce Noise
-                        </button>
+                        <h4>Noise Reduction</h4>
+                        <p>Remove background noise and improve audio clarity</p>
+                        <div class="tool-features">
+                            <span><i class="fas fa-check"></i> Spectral gating</span>
+                            <span><i class="fas fa-check"></i> Adjustable levels</span>
+                        </div>
                     </div>
                 </div>
-                
+
                 <!-- Volume Normalizer -->
                 <div class="col-lg-4 col-md-6">
-                    <div class="text-center">
-                        <div class="feature-icon">
+                    <div class="tool-card" data-tool="normalize">
+                        <div class="tool-icon">
                             <i class="fas fa-volume-up"></i>
                         </div>
-                        <h5>Volume Normalizer</h5>
-                        <p class="text-muted">Normalize audio levels for consistent volume</p>
-                        <button class="btn btn-audio" data-operation="normalize">
-                            Normalize Volume
-                        </button>
+                        <h4>Volume Normalizer</h4>
+                        <p>Normalize audio levels for consistent volume output</p>
+                        <div class="tool-features">
+                            <span><i class="fas fa-check"></i> Target dB control</span>
+                            <span><i class="fas fa-check"></i> Peak limiting</span>
+                        </div>
                     </div>
                 </div>
-                
+
                 <!-- Fade Effects -->
                 <div class="col-lg-4 col-md-6">
-                    <div class="text-center">
-                        <div class="feature-icon">
+                    <div class="tool-card" data-tool="fade">
+                        <div class="tool-icon">
                             <i class="fas fa-chart-line"></i>
                         </div>
-                        <h5>Fade Effects</h5>
-                        <p class="text-muted">Add smooth fade in and fade out effects</p>
-                        <button class="btn btn-audio" data-operation="fade">
-                            Apply Fade
-                        </button>
+                        <h4>Fade Effects</h4>
+                        <p>Add smooth fade in and fade out transitions</p>
+                        <div class="tool-features">
+                            <span><i class="fas fa-check"></i> Custom duration</span>
+                            <span><i class="fas fa-check"></i> Smooth curves</span>
+                        </div>
                     </div>
                 </div>
-                
+
                 <!-- Audio Reverser -->
                 <div class="col-lg-4 col-md-6">
-                    <div class="text-center">
-                        <div class="feature-icon">
+                    <div class="tool-card" data-tool="reverse">
+                        <div class="tool-icon">
                             <i class="fas fa-backward"></i>
                         </div>
-                        <h5>Audio Reverser</h5>
-                        <p class="text-muted">Reverse audio playback for creative effects</p>
-                        <button class="btn btn-audio" data-operation="reverse">
-                            Reverse Audio
-                        </button>
+                        <h4>Audio Reverser</h4>
+                        <p>Reverse audio playback for creative effects</p>
+                        <div class="tool-features">
+                            <span><i class="fas fa-check"></i> Full reversal</span>
+                            <span><i class="fas fa-check"></i> Quality preserved</span>
+                        </div>
                     </div>
                 </div>
-                
+
                 <!-- Equalizer -->
                 <div class="col-lg-4 col-md-6">
-                    <div class="text-center">
-                        <div class="feature-icon">
+                    <div class="tool-card" data-tool="equalizer">
+                        <div class="tool-icon">
                             <i class="fas fa-sliders-h"></i>
                         </div>
-                        <h5>Equalizer</h5>
-                        <p class="text-muted">Adjust low, mid, and high frequency levels</p>
-                        <button class="btn btn-audio" data-operation="equalizer">
-                            Apply EQ
-                        </button>
+                        <h4>3-Band Equalizer</h4>
+                        <p>Adjust low, mid, and high frequency levels</p>
+                        <div class="tool-features">
+                            <span><i class="fas fa-check"></i> ±20dB range</span>
+                            <span><i class="fas fa-check"></i> Professional bands</span>
+                        </div>
                     </div>
                 </div>
-                
+
                 <!-- Metadata Editor -->
                 <div class="col-lg-4 col-md-6">
-                    <div class="text-center">
-                        <div class="feature-icon">
+                    <div class="tool-card" data-tool="metadata">
+                        <div class="tool-icon">
                             <i class="fas fa-tags"></i>
                         </div>
-                        <h5>Metadata Editor</h5>
-                        <p class="text-muted">Edit song title, artist, album information</p>
-                        <button class="btn btn-audio" data-operation="metadata">
-                            Edit Metadata
-                        </button>
+                        <h4>Metadata Editor</h4>
+                        <p>Edit song title, artist, album, and other ID3 tags</p>
+                        <div class="tool-features">
+                            <span><i class="fas fa-check"></i> ID3 tags</span>
+                            <span><i class="fas fa-check"></i> MP3 support</span>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</div>
+    </section>
 
-<!-- Results Section -->
-<div class="row">
-    <div class="col-12">
-        <div id="resultsContainer" style="display: none;"></div>
-    </div>
-</div>
+    <!-- Results Section -->
+    <section class="results-section" id="resultsSection" style="display: none;">
+        <div class="container">
+            <div id="resultsContent"></div>
+        </div>
+    </section>
 
-<!-- Features Overview -->
-<div class="row mt-5">
-    <div class="col-12">
-        <div class="audio-card p-5">
-            <h2 class="text-center mb-4">
-                <i class="fas fa-star"></i> Professional Audio Processing Features
-            </h2>
-            
-            <div class="row g-4">
-                <div class="col-md-6 col-lg-3">
-                    <div class="text-center">
-                        <i class="fas fa-brain fa-2x mb-3 text-primary"></i>
-                        <h5>AI-Powered</h5>
-                        <p class="text-muted">Advanced algorithms for superior audio processing</p>
-                    </div>
+    <!-- Processing Modal -->
+    <div class="modal fade" id="processingModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Processing Options</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                
-                <div class="col-md-6 col-lg-3">
-                    <div class="text-center">
-                        <i class="fas fa-gauge-high fa-2x mb-3 text-success"></i>
-                        <h5>High Quality</h5>
-                        <p class="text-muted">Professional-grade processing with minimal quality loss</p>
-                    </div>
-                </div>
-                
-                <div class="col-md-6 col-lg-3">
-                    <div class="text-center">
-                        <i class="fas fa-mobile-alt fa-2x mb-3 text-info"></i>
-                        <h5>Mobile Friendly</h5>
-                        <p class="text-muted">Responsive design works on all devices</p>
-                    </div>
-                </div>
-                
-                <div class="col-md-6 col-lg-3">
-                    <div class="text-center">
-                        <i class="fas fa-shield-alt fa-2x mb-3 text-warning"></i>
-                        <h5>Secure & Private</h5>
-                        <p class="text-muted">Your files are processed securely and not stored</p>
-                    </div>
+                <div class="modal-body" id="modalBody">
+                    <!-- Dynamic content will be inserted here -->
                 </div>
             </div>
         </div>
     </div>
-</div>
-{% endblock %}
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <h3 id="loadingText">Processing Audio...</h3>
+            <p id="loadingSubtext">This may take a few moments</p>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>ODOREMOVER</h5>
+                    <p>Professional audio processing powered by advanced AI algorithms</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <div class="footer-features">
+                        <span><i class="fas fa-shield-alt"></i> Secure Processing</span>
+                        <span><i class="fas fa-clock"></i> Real-time Results</span>
+                        <span><i class="fas fa-mobile-alt"></i> Mobile Friendly</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/modern-app.js"></script>
+</body>
+</html>

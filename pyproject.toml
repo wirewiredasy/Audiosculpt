@@ -4,17 +4,22 @@ version = "0.1.0"
 description = "Add your description here"
 requires-python = ">=3.11"
 dependencies = [
+    "aiofiles>=24.1.0",
     "email-validator>=2.2.0",
+    "fastapi>=0.116.1",
     "flask>=3.1.1",
     "flask-sqlalchemy>=3.1.1",
     "gunicorn>=23.0.0",
+    "httpx>=0.28.1",
     "librosa>=0.11.0",
     "mutagen>=1.47.0",
     "numpy>=2.2.6",
     "psycopg2-binary>=2.9.10",
     "pydub>=0.25.1",
+    "python-multipart>=0.0.20",
     "scipy>=1.16.1",
     "soundfile>=0.13.1",
+    "uvicorn>=0.35.0",
     "werkzeug>=3.1.3",
 ]
 
