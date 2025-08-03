@@ -21,7 +21,8 @@ import soundfile as sf
 from pydub import AudioSegment
 from pydub.effects import normalize
 from mutagen.mp3 import MP3
-from mutagen.id3 import ID3, TIT2, TPE1, TALB, TPE2
+from mutagen.id3 import ID3
+from mutagen.id3._frames import TIT2, TPE1, TALB, TPE2
 from scipy import signal
 
 # Create Flask app
@@ -336,19 +337,19 @@ class AudioProcessor:
             if low_gain != 0:
                 low_sos = signal.butter(4, low_freq / nyquist, btype='low', output='sos')
                 low_filtered = signal.sosfilt(low_sos, y)
-                low_filtered *= (10 ** (low_gain / 20))
+                low_filtered = low_filtered * (10 ** (low_gain / 20))
                 y = y + (low_filtered - signal.sosfilt(low_sos, y))
             
             if high_gain != 0:
                 high_sos = signal.butter(4, high_freq / nyquist, btype='high', output='sos')
                 high_filtered = signal.sosfilt(high_sos, y)
-                high_filtered *= (10 ** (high_gain / 20))
+                high_filtered = high_filtered * (10 ** (high_gain / 20))
                 y = y + (high_filtered - signal.sosfilt(high_sos, y))
             
             if mid_gain != 0:
                 mid_sos = signal.butter(4, [low_freq / nyquist, high_freq / nyquist], btype='band', output='sos')
                 mid_filtered = signal.sosfilt(mid_sos, y)
-                mid_filtered *= (10 ** (mid_gain / 20))
+                mid_filtered = mid_filtered * (10 ** (mid_gain / 20))
                 y = y + (mid_filtered - signal.sosfilt(mid_sos, y))
             
             y = y / np.max(np.abs(y))
@@ -383,14 +384,16 @@ class AudioProcessor:
             if audio_file.tags is None:
                 audio_file.add_tags()
             
-            if 'title' in metadata:
-                audio_file.tags.add(TIT2(encoding=3, text=metadata['title']))
-            if 'artist' in metadata:
-                audio_file.tags.add(TPE1(encoding=3, text=metadata['artist']))
-            if 'album' in metadata:
-                audio_file.tags.add(TALB(encoding=3, text=metadata['album']))
-            if 'albumartist' in metadata:
-                audio_file.tags.add(TPE2(encoding=3, text=metadata['albumartist']))
+            tags = audio_file.tags
+            if tags is not None:
+                if 'title' in metadata:
+                    tags.add(TIT2(encoding=3, text=metadata['title']))
+                if 'artist' in metadata:
+                    tags.add(TPE1(encoding=3, text=metadata['artist']))
+                if 'album' in metadata:
+                    tags.add(TALB(encoding=3, text=metadata['album']))
+                if 'albumartist' in metadata:
+                    tags.add(TPE2(encoding=3, text=metadata['albumartist']))
             
             audio_file.save()
             
@@ -421,6 +424,8 @@ def upload_audio():
         return jsonify({'error': 'No file selected'}), 400
     
     # Validate file extension
+    if not file.filename:
+        return jsonify({'error': 'Invalid filename'}), 400
     file_ext = os.path.splitext(file.filename)[1].lower()
     if file_ext not in SUPPORTED_FORMATS:
         return jsonify({'error': f"Unsupported format. Allowed: {', '.join(SUPPORTED_FORMATS)}"}), 400
@@ -461,8 +466,11 @@ def separate_vocals():
 def adjust_pitch_tempo():
     """Adjust pitch and tempo"""
     file_id = request.form.get('file_id')
-    pitch_shift = float(request.form.get('pitch_shift', 0))
-    tempo_change = float(request.form.get('tempo_change', 1.0))
+    try:
+        pitch_shift = float(request.form.get('pitch_shift', 0))
+        tempo_change = float(request.form.get('tempo_change', 1.0))
+    except ValueError:
+        return jsonify({'error': 'Invalid numeric values'}), 400
     
     if not file_id:
         return jsonify({'error': 'File ID required'}), 400
@@ -494,8 +502,17 @@ def convert_format():
 def cut_audio():
     """Cut audio segment"""
     file_id = request.form.get('file_id')
-    start_time = float(request.form.get('start_time'))
-    end_time = float(request.form.get('end_time'))
+    start_time_str = request.form.get('start_time')
+    end_time_str = request.form.get('end_time')
+    
+    if not start_time_str or not end_time_str:
+        return jsonify({'error': 'Start time and end time required'}), 400
+    
+    try:
+        start_time = float(start_time_str)
+        end_time = float(end_time_str)
+    except ValueError:
+        return jsonify({'error': 'Invalid time values'}), 400
     
     if not file_id:
         return jsonify({'error': 'File ID required'}), 400
@@ -511,7 +528,10 @@ def cut_audio():
 def reduce_noise():
     """Reduce background noise"""
     file_id = request.form.get('file_id')
-    noise_factor = float(request.form.get('noise_factor', 0.5))
+    try:
+        noise_factor = float(request.form.get('noise_factor', 0.5))
+    except ValueError:
+        return jsonify({'error': 'Invalid noise factor value'}), 400
     
     if not file_id:
         return jsonify({'error': 'File ID required'}), 400
@@ -527,7 +547,10 @@ def reduce_noise():
 def normalize_volume():
     """Normalize audio volume"""
     file_id = request.form.get('file_id')
-    target_db = float(request.form.get('target_db', -20.0))
+    try:
+        target_db = float(request.form.get('target_db', -20.0))
+    except ValueError:
+        return jsonify({'error': 'Invalid target dB value'}), 400
     
     if not file_id:
         return jsonify({'error': 'File ID required'}), 400

@@ -14,7 +14,8 @@ except ImportError:
     HAS_NOISEREDUCE = False
     nr = None
 from mutagen.mp3 import MP3
-from mutagen.id3 import ID3, TIT2, TPE1, TALB, TPE2
+from mutagen.id3 import ID3
+from mutagen.id3._frames import TIT2, TPE1, TALB, TPE2
 from scipy import signal
 import subprocess
 import shutil
@@ -191,7 +192,7 @@ class AudioProcessor:
             # Load audio
             y, sr = librosa.load(input_path, sr=None)
             
-            if HAS_NOISEREDUCE:
+            if HAS_NOISEREDUCE and nr is not None:
                 # Use noisereduce library if available
                 reduced_noise = nr.reduce_noise(y=y, sr=sr, prop_decrease=noise_reduce_factor)
             else:
@@ -282,14 +283,14 @@ class AudioProcessor:
             if low_gain != 0:
                 low_sos = signal.butter(4, low_freq / nyquist, btype='low', output='sos')
                 low_filtered = signal.sosfilt(low_sos, y)
-                low_filtered *= (10 ** (low_gain / 20))
+                low_filtered = low_filtered * (10 ** (low_gain / 20))
                 y = y + (low_filtered - signal.sosfilt(low_sos, y))
             
             # High band (above 3000 Hz)
             if high_gain != 0:
                 high_sos = signal.butter(4, high_freq / nyquist, btype='high', output='sos')
                 high_filtered = signal.sosfilt(high_sos, y)
-                high_filtered *= (10 ** (high_gain / 20))
+                high_filtered = high_filtered * (10 ** (high_gain / 20))
                 y = y + (high_filtered - signal.sosfilt(high_sos, y))
             
             # Mid band (300-3000 Hz)
@@ -297,7 +298,7 @@ class AudioProcessor:
                 mid_sos = signal.butter(4, [low_freq / nyquist, high_freq / nyquist], 
                                       btype='band', output='sos')
                 mid_filtered = signal.sosfilt(mid_sos, y)
-                mid_filtered *= (10 ** (mid_gain / 20))
+                mid_filtered = mid_filtered * (10 ** (mid_gain / 20))
                 y = y + (mid_filtered - signal.sosfilt(mid_sos, y))
             
             # Normalize to prevent clipping
@@ -325,14 +326,16 @@ class AudioProcessor:
                 audio_file.add_tags()
             
             # Set metadata fields
-            if 'title' in metadata:
-                audio_file.tags.add(TIT2(encoding=3, text=metadata['title']))
-            if 'artist' in metadata:
-                audio_file.tags.add(TPE1(encoding=3, text=metadata['artist']))
-            if 'album' in metadata:
-                audio_file.tags.add(TALB(encoding=3, text=metadata['album']))
-            if 'albumartist' in metadata:
-                audio_file.tags.add(TPE2(encoding=3, text=metadata['albumartist']))
+            tags = audio_file.tags
+            if tags is not None:
+                if 'title' in metadata:
+                    tags.add(TIT2(encoding=3, text=metadata['title']))
+                if 'artist' in metadata:
+                    tags.add(TPE1(encoding=3, text=metadata['artist']))
+                if 'album' in metadata:
+                    tags.add(TALB(encoding=3, text=metadata['album']))
+                if 'albumartist' in metadata:
+                    tags.add(TPE2(encoding=3, text=metadata['albumartist']))
             
             audio_file.save()
             return output_path
