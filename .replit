@@ -9,7 +9,7 @@ deploymentTarget = "autoscale"
 run = ["gunicorn", "--bind", "0.0.0.0:5000", "main:app"]
 
 [workflows]
-runButton = "FastAPI Server"
+runButton = "Project"
 
 [[workflows.workflow]]
 name = "Project"
@@ -58,15 +58,6 @@ mode = "sequential"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "python main.py"
-
-[[workflows.workflow]]
-name = "FastAPI Server"
-author = 45908001
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "uvicorn backend.main:app --host 0.0.0.0 --port 5000 --reload"
 
 [[ports]]
 localPort = 5000
