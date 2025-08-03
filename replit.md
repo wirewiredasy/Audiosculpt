@@ -2,7 +2,15 @@
 
 ## Overview
 
-Audio Processor Pro is a Flask-based web application designed for professional audio processing tasks. The application provides a comprehensive suite of audio manipulation tools including vocal separation, pitch adjustment, format conversion, noise reduction, and audio enhancement. It features a modern dark-themed web interface with drag-and-drop file upload functionality and supports multiple audio formats (MP3, WAV, FLAC, OGG, M4A).
+Audio Processor Pro is a FastAPI-based microservices application designed for professional audio processing tasks. The application provides a comprehensive suite of 13 audio manipulation tools across 8 independent microservices including vocal separation, pitch adjustment, format conversion, noise reduction, and audio enhancement. It features a modern dark-themed web interface with drag-and-drop file upload functionality and supports multiple audio formats (MP3, WAV, FLAC, OGG, M4A).
+
+## Recent Changes (August 2025)
+
+- ✅ **Complete Flask to FastAPI Migration**: Successfully migrated from Flask to FastAPI with full microservices architecture
+- ✅ **Microservices Implementation**: Created 8 independent services for each audio processing tool
+- ✅ **ASGI Server**: Now using uvicorn instead of gunicorn for high-performance async processing
+- ✅ **13 Processing Endpoints**: All audio tools available through separate microservice endpoints
+- ✅ **Async Error Handling**: Implemented comprehensive async error handling with proper HTTP status codes
 
 ## User Preferences
 
