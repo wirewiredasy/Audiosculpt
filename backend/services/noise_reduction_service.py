@@ -30,6 +30,7 @@ class NoiseReductionService:
         try:
             print(f"🔧 Loading audio file: {input_path}")
             y, sr = librosa.load(input_path, sr=None)
+            sr = int(sr)  # Ensure sr is always int
             print(f"📊 Audio loaded - Sample rate: {sr}Hz, Duration: {len(y)/sr:.2f}s")
             
             # Method 1: Use noisereduce if available (best quality)
@@ -173,6 +174,7 @@ class NoiseReductionService:
             
             # Load with higher precision
             y, sr = librosa.load(input_path, sr=None)
+            sr = int(sr)  # Ensure sr is always int
             
             # Multi-pass noise reduction
             print("🔄 Applying multi-pass noise reduction...")
