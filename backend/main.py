@@ -133,13 +133,14 @@ async def download_file(filename: str):
         raise HTTPException(status_code=404, detail="File not found")
     return FileResponse(file_path, filename=filename)
 
-# 1. Vocal Separation Microservice
+# 1. Vocal Separation Microservice - TEMPORARILY DISABLED
 @app.post("/api/vocal-separation", response_model=VocalSeparationResponse)
 async def separate_vocals(file_id: str = Form(...)):
-    """Separate vocals and instrumental tracks"""
-    file_path = validate_file_exists(file_id)
-    result = await app.state.vocal_service.separate_vocals(file_path, "processed")
-    return VocalSeparationResponse(**result)
+    """Separate vocals and instrumental tracks - DISABLED"""
+    return VocalSeparationResponse(
+        success=False, 
+        error="Vocal separation service temporarily disabled due to dependency issues"
+    )
 
 # 2. Pitch and Tempo Microservice
 @app.post("/api/pitch-tempo", response_model=ProcessingResponse)
@@ -194,30 +195,28 @@ async def join_audio(file_ids: str = Form(...)):
     result = await app.state.cutting_service.join_audio(file_paths, "processed")
     return ProcessingResponse(**result)
 
-# 6. Noise Reduction Microservice
+# 6. Noise Reduction Microservice - TEMPORARILY DISABLED
 @app.post("/api/noise-reduction", response_model=ProcessingResponse)
 async def reduce_noise(
     file_id: str = Form(...),
     noise_factor: float = Form(0.5)
 ):
-    """Reduce background noise"""
-    file_path = validate_file_exists(file_id)
-    result = await app.state.noise_service.reduce_noise(
-        file_path, "processed", noise_factor
+    """Reduce background noise - DISABLED"""
+    return ProcessingResponse(
+        success=False, 
+        error="Noise reduction service temporarily disabled due to dependency issues"
     )
-    return ProcessingResponse(**result)
 
 @app.post("/api/noise-reduction-aggressive", response_model=ProcessingResponse)
 async def reduce_noise_aggressive(
     file_id: str = Form(...),
     noise_factor: float = Form(0.8)
 ):
-    """Aggressive noise reduction for very noisy audio"""
-    file_path = validate_file_exists(file_id)
-    result = await app.state.noise_service.reduce_noise_aggressive(
-        file_path, "processed", noise_factor
+    """Aggressive noise reduction for very noisy audio - DISABLED"""
+    return ProcessingResponse(
+        success=False, 
+        error="Aggressive noise reduction service temporarily disabled due to dependency issues"
     )
-    return ProcessingResponse(**result)
 
 # 7. Volume Normalization Microservice
 @app.post("/api/normalize", response_model=ProcessingResponse)

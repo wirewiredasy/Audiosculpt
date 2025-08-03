@@ -192,15 +192,12 @@ class ModernAudioApp {
         switch (tool) {
             case 'vocal-separation':
                 return `
-                    <form class="processing-form" data-tool="vocal-separation">
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle"></i>
-                            This will separate your audio into vocals and instrumental tracks using advanced AI processing.
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="fas fa-microphone-slash"></i> Separate Vocals
-                        </button>
-                    </form>
+                    <div class="alert alert-warning">
+                        <i class="fas fa-wrench"></i>
+                        <strong>Service Temporarily Disabled</strong><br>
+                        Vocal separation is currently unavailable due to dependency issues. 
+                        Please try other audio tools.
+                    </div>
                 `;
 
             case 'pitch-tempo':
