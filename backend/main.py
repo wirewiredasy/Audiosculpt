@@ -207,6 +207,18 @@ async def reduce_noise(
     )
     return ProcessingResponse(**result)
 
+@app.post("/api/noise-reduction-aggressive", response_model=ProcessingResponse)
+async def reduce_noise_aggressive(
+    file_id: str = Form(...),
+    noise_factor: float = Form(0.8)
+):
+    """Aggressive noise reduction for very noisy audio"""
+    file_path = validate_file_exists(file_id)
+    result = await app.state.noise_service.reduce_noise_aggressive(
+        file_path, "processed", noise_factor
+    )
+    return ProcessingResponse(**result)
+
 # 7. Volume Normalization Microservice
 @app.post("/api/normalize", response_model=ProcessingResponse)
 async def normalize_volume(

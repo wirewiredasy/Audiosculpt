@@ -34,7 +34,7 @@ class ModernAudioApp {
         uploadArea.addEventListener('drop', (e) => {
             e.preventDefault();
             uploadArea.classList.remove('dragover');
-            
+
             const files = e.dataTransfer.files;
             if (files.length > 0) {
                 this.handleFileUpload(files[0]);
@@ -55,14 +55,14 @@ class ModernAudioApp {
 
     setupToolCards() {
         const toolCards = document.querySelectorAll('.tool-card');
-        
+
         toolCards.forEach(card => {
             card.addEventListener('click', () => {
                 if (!this.currentFileId) {
                     this.showAlert('Please upload an audio file first', 'warning');
                     return;
                 }
-                
+
                 const tool = card.getAttribute('data-tool');
                 this.openProcessingModal(tool);
             });
@@ -154,7 +154,7 @@ class ModernAudioApp {
         const toolsSection = document.getElementById('toolsSection');
         toolsSection.style.display = 'block';
         toolsSection.classList.add('slide-up');
-        
+
         // Scroll to tools section
         setTimeout(() => {
             toolsSection.scrollIntoView({ behavior: 'smooth' });
@@ -273,6 +273,10 @@ class ModernAudioApp {
                                 <span>Light</span><span id="noiseValue" class="fw-bold">Medium</span><span>Heavy</span>
                             </div>
                         </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="aggressiveMode">
+                            <label class="form-check-label" for="aggressiveMode">Aggressive Mode (for very noisy audio)</label>
+                        </div>
                         <button type="submit" class="btn btn-primary w-100">
                             <i class="fas fa-volume-xmark"></i> Reduce Noise
                         </button>
@@ -388,7 +392,7 @@ class ModernAudioApp {
     async processAudio(form) {
         const tool = form.getAttribute('data-tool');
         const formData = new FormData(form);
-        
+
         // Add file_id to form data
         formData.append('file_id', this.currentFileId);
 
@@ -557,7 +561,7 @@ class ModernAudioApp {
     showLoading(text = 'Processing...') {
         const overlay = document.getElementById('loadingOverlay');
         const loadingText = document.getElementById('loadingText');
-        
+
         loadingText.textContent = text;
         overlay.classList.add('show');
     }
@@ -575,7 +579,7 @@ class ModernAudioApp {
         alert.style.right = '20px';
         alert.style.zIndex = '9999';
         alert.style.minWidth = '300px';
-        
+
         alert.innerHTML = `
             ${message}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -593,7 +597,7 @@ class ModernAudioApp {
 
     formatDuration(seconds) {
         if (isNaN(seconds)) return '0:00';
-        
+
         const minutes = Math.floor(seconds / 60);
         const remainingSeconds = Math.floor(seconds % 60);
         return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
