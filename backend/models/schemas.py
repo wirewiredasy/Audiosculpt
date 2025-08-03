@@ -21,17 +21,10 @@ class VocalSeparationResponse(BaseModel):
     error: Optional[str] = None
 
 class AudioInfo(BaseModel):
-    file_id: Optional[str] = None
-    original_name: Optional[str] = None
-    duration: float
-    channels: int
-    frame_rate: int
-    sample_width: int
-    format: str
-    title: Optional[str] = None
-    artist: Optional[str] = None
-    album: Optional[str] = None
-    bitrate: Optional[str] = None
+    success: bool
+    info: Optional[Dict[str, Any]] = None
+    error: Optional[str] = None
+    message: Optional[str] = None
 
 class MetadataRequest(BaseModel):
     file_id: str

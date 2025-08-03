@@ -1,26 +1,29 @@
 """
-FastAPI API Gateway for Audio Processing Microservices
+Audio Processor Pro - Complete FastAPI Microservices Application
+Clean implementation with all microservices
 """
 import os
 import uuid
-import asyncio
-from typing import Optional, List
+from typing import Optional, Dict, Any
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, File, UploadFile, HTTPException, Form, BackgroundTasks
+from fastapi import FastAPI, File, UploadFile, HTTPException, Form
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 import aiofiles
-import httpx
 
-from backend.services.audio_processor import AudioProcessorService
-from backend.models.schemas import (
-    ProcessingRequest, 
-    ProcessingResponse, 
-    AudioInfo,
-    VocalSeparationResponse
-)
+# Import all microservices
+from backend.services.vocal_separation_service import VocalSeparationService
+from backend.services.pitch_tempo_service import PitchTempoService
+from backend.services.format_conversion_service import FormatConversionService
+from backend.services.audio_cutting_service import AudioCuttingService
+from backend.services.noise_reduction_service import NoiseReductionService
+from backend.services.volume_normalization_service import VolumeNormalizationService
+from backend.services.audio_effects_service import AudioEffectsService
+from backend.services.metadata_service import MetadataService
+
+from backend.models.schemas import *
 
 # Create directories
 os.makedirs("uploads", exist_ok=True)
@@ -29,19 +32,31 @@ os.makedirs("static", exist_ok=True)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application lifespan manager"""
-    # Startup
-    app.state.audio_service = AudioProcessorService()
+    """Application lifespan manager - Initialize all microservices"""
+    # Startup - Initialize all microservices
+    app.state.vocal_service = VocalSeparationService()
+    app.state.pitch_tempo_service = PitchTempoService()
+    app.state.format_service = FormatConversionService()
+    app.state.cutting_service = AudioCuttingService()
+    app.state.noise_service = NoiseReductionService()
+    app.state.volume_service = VolumeNormalizationService()
+    app.state.effects_service = AudioEffectsService()
+    app.state.metadata_service = MetadataService()
+    
     yield
-    # Shutdown
-    if hasattr(app.state, 'audio_service'):
-        app.state.audio_service.cleanup()
+    
+    # Shutdown - Cleanup all services
+    for service_name in ['vocal_service']:
+        if hasattr(app.state, service_name):
+            service = getattr(app.state, service_name)
+            if hasattr(service, 'cleanup'):
+                service.cleanup()
 
 # Create FastAPI app
 app = FastAPI(
-    title="ODOREMOVER - Audio Processing API",
-    description="Professional audio processing microservices with 11+ features",
-    version="2.0.0",
+    title="Audio Processor Pro - Microservices API",
+    description="Professional audio processing with independent microservices for each tool",
+    version="3.0.0",
     lifespan=lifespan
 )
 
@@ -57,12 +72,22 @@ app.add_middleware(
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+# Helper function to validate file exists
+def validate_file_exists(file_id: str) -> str:
+    file_path = os.path.join("uploads", file_id)
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="File not found")
+    return file_path
+
 @app.get("/", response_class=HTMLResponse)
 async def root():
     """Serve the main application page"""
-    async with aiofiles.open("templates/index.html", mode='r') as f:
-        content = await f.read()
-    return HTMLResponse(content=content)
+    try:
+        async with aiofiles.open("templates/index.html", mode='r') as f:
+            content = await f.read()
+        return HTMLResponse(content=content)
+    except FileNotFoundError:
+        return HTMLResponse(content="<h1>Audio Processor Pro - Microservices API</h1><p>Upload endpoint: /api/upload</p>")
 
 @app.post("/api/upload", response_model=AudioInfo)
 async def upload_audio(file: UploadFile = File(...)):
@@ -89,117 +114,135 @@ async def upload_audio(file: UploadFile = File(...)):
         content = await file.read()
         await f.write(content)
     
-    # Get audio info
-    audio_info = await app.state.audio_service.get_audio_info(file_path)
-    audio_info.file_id = unique_filename
-    audio_info.original_name = file.filename
-    
-    return audio_info
+    # Get audio info using metadata service
+    result = await app.state.metadata_service.get_audio_info(file_path)
+    if result['success']:
+        info = result['info']
+        info['file_id'] = unique_filename
+        info['original_name'] = file.filename
+        return AudioInfo(success=True, info=info, message="File uploaded successfully")
+    else:
+        return AudioInfo(success=False, error=result['error'])
 
-@app.post("/api/process/vocal-separation", response_model=VocalSeparationResponse)
-async def separate_vocals(request: ProcessingRequest):
-    """Separate vocals from instrumental"""
-    file_path = f"uploads/{request.file_id}"
+# Download processed file
+@app.get("/api/download/{filename}")
+async def download_file(filename: str):
+    """Download processed audio file"""
+    file_path = os.path.join("processed", filename)
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="File not found")
-    
-    result = await app.state.audio_service.separate_vocals(file_path)
-    return result
+    return FileResponse(file_path, filename=filename)
 
-@app.post("/api/process/pitch-tempo", response_model=ProcessingResponse)
+# 1. Vocal Separation Microservice
+@app.post("/api/vocal-separation", response_model=VocalSeparationResponse)
+async def separate_vocals(file_id: str = Form(...)):
+    """Separate vocals and instrumental tracks"""
+    file_path = validate_file_exists(file_id)
+    result = await app.state.vocal_service.separate_vocals(file_path, "processed")
+    return VocalSeparationResponse(**result)
+
+# 2. Pitch and Tempo Microservice
+@app.post("/api/pitch-tempo", response_model=ProcessingResponse)
 async def adjust_pitch_tempo(
     file_id: str = Form(...),
     pitch_shift: float = Form(0),
     tempo_change: float = Form(1.0)
 ):
     """Adjust pitch and tempo"""
-    file_path = f"uploads/{file_id}"
-    if not os.path.exists(file_path):
-        raise HTTPException(status_code=404, detail="File not found")
-    
-    result = await app.state.audio_service.change_pitch_tempo(
-        file_path, pitch_shift, tempo_change
+    file_path = validate_file_exists(file_id)
+    result = await app.state.pitch_tempo_service.change_pitch_tempo(
+        file_path, "processed", pitch_shift, tempo_change
     )
-    return result
+    return ProcessingResponse(**result)
 
-@app.post("/api/process/convert", response_model=ProcessingResponse)
+# 3. Format Conversion Microservice
+@app.post("/api/convert", response_model=ProcessingResponse)
 async def convert_format(
     file_id: str = Form(...),
     output_format: str = Form(...)
 ):
     """Convert audio format"""
-    file_path = f"uploads/{file_id}"
-    if not os.path.exists(file_path):
-        raise HTTPException(status_code=404, detail="File not found")
-    
-    result = await app.state.audio_service.convert_format(file_path, output_format)
-    return result
+    file_path = validate_file_exists(file_id)
+    result = await app.state.format_service.convert_format(
+        file_path, "processed", output_format
+    )
+    return ProcessingResponse(**result)
 
-@app.post("/api/process/cut", response_model=ProcessingResponse)
+# 4. Audio Cutting Microservice
+@app.post("/api/cut", response_model=ProcessingResponse)
 async def cut_audio(
     file_id: str = Form(...),
     start_time: float = Form(...),
     end_time: float = Form(...)
 ):
     """Cut audio segment"""
-    file_path = f"uploads/{file_id}"
-    if not os.path.exists(file_path):
-        raise HTTPException(status_code=404, detail="File not found")
-    
-    result = await app.state.audio_service.cut_audio(file_path, start_time, end_time)
-    return result
+    file_path = validate_file_exists(file_id)
+    result = await app.state.cutting_service.cut_audio(
+        file_path, "processed", start_time, end_time
+    )
+    return ProcessingResponse(**result)
 
-@app.post("/api/process/noise-reduction", response_model=ProcessingResponse)
+# 5. Audio Joining (part of cutting service)
+@app.post("/api/join", response_model=ProcessingResponse)
+async def join_audio(file_ids: str = Form(...)):
+    """Join multiple audio files"""
+    file_id_list = file_ids.split(",")
+    file_paths = []
+    for fid in file_id_list:
+        file_paths.append(validate_file_exists(fid.strip()))
+    
+    result = await app.state.cutting_service.join_audio(file_paths, "processed")
+    return ProcessingResponse(**result)
+
+# 6. Noise Reduction Microservice
+@app.post("/api/noise-reduction", response_model=ProcessingResponse)
 async def reduce_noise(
     file_id: str = Form(...),
     noise_factor: float = Form(0.5)
 ):
     """Reduce background noise"""
-    file_path = f"uploads/{file_id}"
-    if not os.path.exists(file_path):
-        raise HTTPException(status_code=404, detail="File not found")
-    
-    result = await app.state.audio_service.reduce_noise(file_path, noise_factor)
-    return result
+    file_path = validate_file_exists(file_id)
+    result = await app.state.noise_service.reduce_noise(
+        file_path, "processed", noise_factor
+    )
+    return ProcessingResponse(**result)
 
-@app.post("/api/process/normalize", response_model=ProcessingResponse)
+# 7. Volume Normalization Microservice
+@app.post("/api/normalize", response_model=ProcessingResponse)
 async def normalize_volume(
     file_id: str = Form(...),
     target_db: float = Form(-20.0)
 ):
     """Normalize audio volume"""
-    file_path = f"uploads/{file_id}"
-    if not os.path.exists(file_path):
-        raise HTTPException(status_code=404, detail="File not found")
-    
-    result = await app.state.audio_service.normalize_volume(file_path, target_db)
-    return result
+    file_path = validate_file_exists(file_id)
+    result = await app.state.volume_service.normalize_volume(
+        file_path, "processed", target_db
+    )
+    return ProcessingResponse(**result)
 
-@app.post("/api/process/fade", response_model=ProcessingResponse)
-async def apply_fade(
+# 8. Volume Adjustment (part of volume service)
+@app.post("/api/adjust-volume", response_model=ProcessingResponse)
+async def adjust_volume(
     file_id: str = Form(...),
-    fade_in: float = Form(0),
-    fade_out: float = Form(0)
+    volume_change_db: float = Form(...)
 ):
-    """Apply fade in/out effects"""
-    file_path = f"uploads/{file_id}"
-    if not os.path.exists(file_path):
-        raise HTTPException(status_code=404, detail="File not found")
-    
-    result = await app.state.audio_service.apply_fade(file_path, fade_in, fade_out)
-    return result
+    """Adjust volume by specific dB amount"""
+    file_path = validate_file_exists(file_id)
+    result = await app.state.volume_service.adjust_volume(
+        file_path, "processed", volume_change_db
+    )
+    return ProcessingResponse(**result)
 
-@app.post("/api/process/reverse", response_model=ProcessingResponse)
-async def reverse_audio(request: ProcessingRequest):
+# 9. Audio Reversal (Effects service)
+@app.post("/api/reverse", response_model=ProcessingResponse)
+async def reverse_audio(file_id: str = Form(...)):
     """Reverse audio playback"""
-    file_path = f"uploads/{request.file_id}"
-    if not os.path.exists(file_path):
-        raise HTTPException(status_code=404, detail="File not found")
-    
-    result = await app.state.audio_service.reverse_audio(file_path)
-    return result
+    file_path = validate_file_exists(file_id)
+    result = await app.state.effects_service.reverse_audio(file_path, "processed")
+    return ProcessingResponse(**result)
 
-@app.post("/api/process/equalizer", response_model=ProcessingResponse)
+# 10. Equalizer (Effects service)
+@app.post("/api/equalizer", response_model=ProcessingResponse)
 async def apply_equalizer(
     file_id: str = Form(...),
     low_gain: float = Form(0),
@@ -207,67 +250,62 @@ async def apply_equalizer(
     high_gain: float = Form(0)
 ):
     """Apply 3-band equalizer"""
-    file_path = f"uploads/{file_id}"
-    if not os.path.exists(file_path):
-        raise HTTPException(status_code=404, detail="File not found")
-    
-    result = await app.state.audio_service.apply_equalizer(
-        file_path, low_gain, mid_gain, high_gain
+    file_path = validate_file_exists(file_id)
+    result = await app.state.effects_service.apply_equalizer(
+        file_path, "processed", low_gain, mid_gain, high_gain
     )
-    return result
+    return ProcessingResponse(**result)
 
-@app.post("/api/process/metadata", response_model=ProcessingResponse)
+# 11. Fade Effects (Effects service)
+@app.post("/api/fade", response_model=ProcessingResponse)
+async def add_fade(
+    file_id: str = Form(...),
+    fade_in_duration: float = Form(0),
+    fade_out_duration: float = Form(0)
+):
+    """Add fade in/out effects"""
+    file_path = validate_file_exists(file_id)
+    result = await app.state.effects_service.add_fade(
+        file_path, "processed", fade_in_duration, fade_out_duration
+    )
+    return ProcessingResponse(**result)
+
+# 12. Metadata Service - Get Info
+@app.get("/api/info/{file_id}", response_model=AudioInfo)
+async def get_audio_info(file_id: str):
+    """Get audio file information"""
+    file_path = validate_file_exists(file_id)
+    result = await app.state.metadata_service.get_audio_info(file_path)
+    return AudioInfo(**result)
+
+# 13. Metadata Service - Edit Metadata
+@app.post("/api/metadata", response_model=ProcessingResponse)
 async def edit_metadata(
     file_id: str = Form(...),
-    title: Optional[str] = Form(None),
-    artist: Optional[str] = Form(None),
-    album: Optional[str] = Form(None),
-    album_artist: Optional[str] = Form(None)
+    title: str = Form(None),
+    artist: str = Form(None),
+    album: str = Form(None),
+    albumartist: str = Form(None)
 ):
     """Edit MP3 metadata"""
-    file_path = f"uploads/{file_id}"
-    if not os.path.exists(file_path):
-        raise HTTPException(status_code=404, detail="File not found")
-    
-    if not file_path.lower().endswith('.mp3'):
-        raise HTTPException(
-            status_code=400, 
-            detail="Metadata editing only supported for MP3 files"
-        )
-    
+    file_path = validate_file_exists(file_id)
     metadata = {}
     if title: metadata['title'] = title
     if artist: metadata['artist'] = artist
     if album: metadata['album'] = album
-    if album_artist: metadata['albumartist'] = album_artist
+    if albumartist: metadata['albumartist'] = albumartist
     
-    result = await app.state.audio_service.edit_metadata(file_path, metadata)
-    return result
-
-@app.get("/api/download/{filename}")
-async def download_file(filename: str):
-    """Download processed file"""
-    file_path = f"processed/{filename}"
-    if not os.path.exists(file_path):
-        raise HTTPException(status_code=404, detail="File not found")
-    
-    return FileResponse(
-        file_path, 
-        media_type='application/octet-stream',
-        filename=filename
+    result = await app.state.metadata_service.edit_metadata(
+        file_path, "processed", metadata
     )
+    return ProcessingResponse(**result)
 
-@app.get("/api/health")
+# Health check endpoint
+@app.get("/health")
 async def health_check():
-    """Health check endpoint"""
-    return {"status": "healthy", "service": "ODOREMOVER Audio Processing API"}
+    """Health check for microservices"""
+    return {"status": "healthy", "services": "all_running", "version": "3.0.0"}
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(
-        "main:app", 
-        host="0.0.0.0", 
-        port=5000, 
-        reload=True,
-        log_level="info"
-    )
+    uvicorn.run(app, host="0.0.0.0", port=5000)

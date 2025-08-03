@@ -17,11 +17,12 @@ Preferred communication style: Simple, everyday language.
 - **User Interface**: Single-page application with drag-and-drop file upload and real-time audio processing controls
 
 ### Backend Architecture
-- **Web Framework**: Flask with ProxyFix middleware for deployment behind reverse proxies
-- **Audio Processing Engine**: Custom AudioProcessor class using multiple audio libraries (librosa, pydub, soundfile)
+- **Web Framework**: FastAPI with ASGI server for high-performance async processing
+- **Microservices Architecture**: Independent services for each audio processing tool
+- **Audio Processing Services**: Separate microservices for vocal separation, pitch/tempo, format conversion, cutting, noise reduction, volume normalization, effects, and metadata
 - **File Management**: Secure file handling with UUID-based naming and validation
-- **Session Management**: Flask sessions with configurable secret key
-- **Error Handling**: Comprehensive logging and error handling throughout the application
+- **API Gateway**: Central FastAPI application managing all microservice interactions
+- **Error Handling**: Comprehensive async error handling with proper HTTP status codes
 
 ### Audio Processing Pipeline
 - **Format Support**: Multi-format audio file validation and conversion
