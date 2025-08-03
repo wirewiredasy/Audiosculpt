@@ -13,12 +13,11 @@ from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 import aiofiles
 
-# Import all microservices
+# Import all microservices (excluding noise reduction)
 from backend.services.vocal_separation_service import VocalSeparationService
 from backend.services.pitch_tempo_service import PitchTempoService
 from backend.services.format_conversion_service import FormatConversionService
 from backend.services.audio_cutting_service import AudioCuttingService
-from backend.services.noise_reduction_service import NoiseReductionService
 from backend.services.volume_normalization_service import VolumeNormalizationService
 from backend.services.audio_effects_service import AudioEffectsService
 from backend.services.metadata_service import MetadataService
@@ -33,12 +32,11 @@ os.makedirs("static", exist_ok=True)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan manager - Initialize all microservices"""
-    # Startup - Initialize all microservices
+    # Startup - Initialize all microservices (excluding noise reduction)
     app.state.vocal_service = VocalSeparationService()
     app.state.pitch_tempo_service = PitchTempoService()
     app.state.format_service = FormatConversionService()
     app.state.cutting_service = AudioCuttingService()
-    app.state.noise_service = NoiseReductionService()
     app.state.volume_service = VolumeNormalizationService()
     app.state.effects_service = AudioEffectsService()
     app.state.metadata_service = MetadataService()
@@ -195,28 +193,8 @@ async def join_audio(file_ids: str = Form(...)):
     result = await app.state.cutting_service.join_audio(file_paths, "processed")
     return ProcessingResponse(**result)
 
-# 6. Noise Reduction Microservice - TEMPORARILY DISABLED
-@app.post("/api/noise-reduction", response_model=ProcessingResponse)
-async def reduce_noise(
-    file_id: str = Form(...),
-    noise_factor: float = Form(0.5)
-):
-    """Reduce background noise - DISABLED"""
-    return ProcessingResponse(
-        success=False, 
-        error="Noise reduction service temporarily disabled due to dependency issues"
-    )
-
-@app.post("/api/noise-reduction-aggressive", response_model=ProcessingResponse)
-async def reduce_noise_aggressive(
-    file_id: str = Form(...),
-    noise_factor: float = Form(0.8)
-):
-    """Aggressive noise reduction for very noisy audio - DISABLED"""
-    return ProcessingResponse(
-        success=False, 
-        error="Aggressive noise reduction service temporarily disabled due to dependency issues"
-    )
+# 6. Noise Reduction Microservice - REMOVED
+# Noise reduction functionality has been removed to eliminate dependency issues
 
 # 7. Volume Normalization Microservice
 @app.post("/api/normalize", response_model=ProcessingResponse)
