@@ -4,7 +4,8 @@ Entry point for the audio processing application
 """
 import uvicorn
 
+# Import the FastAPI app for gunicorn
+from backend.main import app
+
 if __name__ == "__main__":
     uvicorn.run("backend.main:app", host="0.0.0.0", port=5000, reload=True)
-else:
-    from backend.main import app
