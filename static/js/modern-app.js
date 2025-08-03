@@ -265,22 +265,12 @@ class ModernAudioApp {
 
             case 'noise-reduction':
                 return `
-                    <form class="processing-form" data-tool="noise-reduction">
-                        <div class="mb-4">
-                            <label class="form-label">Noise Reduction Level</label>
-                            <input type="range" class="form-range" name="noise_factor" min="0.1" max="1.0" value="0.5" step="0.1">
-                            <div class="d-flex justify-content-between small text-muted">
-                                <span>Light</span><span id="noiseValue" class="fw-bold">Medium</span><span>Heavy</span>
-                            </div>
-                        </div>
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="aggressiveMode">
-                            <label class="form-check-label" for="aggressiveMode">Aggressive Mode (for very noisy audio)</label>
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="fas fa-volume-xmark"></i> Reduce Noise
-                        </button>
-                    </form>
+                    <div class="alert alert-warning">
+                        <i class="fas fa-wrench"></i>
+                        <strong>Service Temporarily Disabled</strong><br>
+                        Noise reduction feature is currently under maintenance for improvements. 
+                        Please try other audio processing tools.
+                    </div>
                 `;
 
             case 'normalize':
